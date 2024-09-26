@@ -1,0 +1,13 @@
+config {
+    type: "table",
+    "columns": {
+        id: "id",
+        name: {
+          description: "name",
+          bigqueryPolicyTags: ["projects/example-project/locations/us/taxonomies/123456789/policyTags/123456789"]
+        }
+    }
+}
+SELECT id,
+    name
+FROM ${ref('table0')}

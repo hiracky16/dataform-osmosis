@@ -1,0 +1,9 @@
+config {
+  type: "declaration",
+  schema: "dataform",
+  name: "table0",
+  columns: {
+    id: "id",
+    name: "name"
+  }
+}

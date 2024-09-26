@@ -1,0 +1,5 @@
+config {
+    type: "table"
+}
+SELECT *
+FROM ${ref('table1')}
