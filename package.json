@@ -1,0 +1,21 @@
+{
+  "name": "dataform-osmosis",
+  "version": "1.0.0",
+  "description": "dataform osmosis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./bin/main.js"
+  },
+  "dependencies": {
+    "@dataform/cli": "^3.0.0",
+    "@dataform/core": "^3.0.0",
+    "@google-cloud/bigquery": "^7.9.0",
+    "commander": "12.1.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "dataform-osmosis": "./bin/main.js"
+  }
+}

@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./definitions:/app/definitions
+      - ./src:/app/src
+      - ./bin:/app/bin
