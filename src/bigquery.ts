@@ -8,8 +8,8 @@ const bigquery = new BigQuery({
 
 export const checkBigQuery = async () => {
   try {
-    const project = await bigquery.getProjectId();
-    console.log(`BigQuery client is working. Found projects: ${project}`);
+    await bigquery.getProjectId();
+    console.log(`BigQuery client is working.`);
   } catch (err) {
     console.error("Error: BigQuery client is not working.", err);
   }

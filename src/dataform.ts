@@ -5,7 +5,7 @@ import { DataformProject, Sqlx } from "./dataformTypes";
 
 const execAsync = util.promisify(exec);
 
-const checkDataformCli = async () => {
+export const checkDataformCli = async () => {
   const { stdout, stderr } = await execAsync("dataform --version");
   if (stderr) {
     console.error("Error: Dataform CLI is not working.", stderr);
