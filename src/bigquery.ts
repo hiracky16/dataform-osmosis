@@ -1,6 +1,7 @@
 import { BigQuery } from "@google-cloud/bigquery";
+import { BigQueryTable } from "./dataformTypes";
 
-const PROJECT_ID = process.env.PROJECT_ID || ''
+const PROJECT_ID = process.env.PROJECT_ID || "";
 
 const bigquery = new BigQuery({
   projectId: PROJECT_ID,
@@ -17,29 +18,34 @@ export const checkBigQuery = async () => {
 
 export const listTablesAndColumns = async (
   datasetId: string
-) => {
-  // データセットからテーブル一覧を取得
+): Promise<BigQueryTable[]> => {
   const dataset = bigquery.dataset(datasetId);
-
+  const bigqueryTables = [];
   try {
     const [tables] = await dataset.getTables();
-
-    // 各テーブルのカラム名を取得
     for (const table of tables) {
-      console.log(`Table: ${table.id}`);
+      if (!table || !table.id) {
+        continue;
+      }
 
-      // テーブルのスキーマを取得
       const [metadata] = await table.getMetadata();
       const schemaFields = metadata.schema.fields;
-
-      console.log("Columns:");
-      schemaFields.forEach((field: { name: string; type: string }) => {
-        console.log(field);
-      });
-
-      console.log(""); // 空行を出力
+      const bigqueryTable: BigQueryTable = {
+        dataset: dataset.id || datasetId,
+        table: table.id,
+        fields: schemaFields.map(
+          (schema: { name: string; description?: string }) => {
+            return {
+              name: schema.name,
+              description: schema.description || "",
+            };
+          }
+        ),
+      };
+      bigqueryTables.push(bigqueryTable);
     }
   } catch (error) {
     console.error("Error:", error);
   }
+  return bigqueryTables;
 };

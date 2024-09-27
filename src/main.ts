@@ -9,9 +9,9 @@ const refactor = async () => {
   const dataformTables = result.tables.concat(result.declarations)
   const tableConfigs = dataformTables.map((table) => readSqlx(table.fileName));
   const datasets = dataformTables.map(table => table.target.schema)
-  console.log(datasets)
 
-//   await listTablesAndColumns(PROJECT_ID, datasetId);
+  const tables = await listTablesAndColumns(datasets[0]);
+  console.log(tables)
 };
 
 const program = new Command();

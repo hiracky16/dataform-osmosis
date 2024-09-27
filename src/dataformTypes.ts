@@ -69,9 +69,7 @@ type BigQueryTable = {
   table: string;
   fields: {
     name: string;
-    type: string;
     description?: string;
-    mode?: string;
   }[];
 };
 
@@ -91,4 +89,4 @@ class DataformOsmosisTable {
   }
 }
 
-export type { DataformProject, Sqlx, DataformOsmosisTable };
+export type { DataformProject, Sqlx, DataformOsmosisTable, BigQueryTable };
