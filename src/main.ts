@@ -31,6 +31,7 @@ program
 
 // 'refactor' コマンド
 program
+  .command('sqlx')
   .command('refactor')
   .description('Refactor the current Dataform project')
   .action(async () => {
