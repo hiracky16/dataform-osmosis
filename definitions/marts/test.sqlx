@@ -1,0 +1,2 @@
+config { type: "table" }
+select 1 from ${ref('table1')}
