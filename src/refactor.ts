@@ -44,38 +44,32 @@ export const refactoringFiles = (filePath: string): string[] => {
   }
 };
 
-// トポロジカルソート関数
-const topoSortRefactoringFiles = (
+// Sqlx オブジェクトの初期化と依存関係設定
+const initializeSqlxObjects = (
   refactoringFiles: string[],
   dataformProject: DataformProject
-): string[] => {
-  // 依存関係グラフの作成
-  const graph: Record<string, string[]> = {};
-  const inDegree: Record<string, number> = {};
+): Sqlx[] => {
+  const sqlxObjects: Sqlx[] = [];
 
-  // refactoringFiles に対して初期化
+  // refactoringFiles に基づいて Sqlx オブジェクトを初期化
   refactoringFiles.forEach((file) => {
-    graph[file] = [];
-    inDegree[file] = 0;
-  });
+    const dataformTable =
+      dataformProject.tables.find((table) => table.fileName === file) ||
+      dataformProject.declarations.find((table) => table.fileName === file);
 
-  // declarations の処理
-  dataformProject.declarations.forEach((declaration) => {
-    const fileName = declaration.fileName;
-    if (refactoringFiles.includes(fileName)) {
-      // declarations は依存関係を持たないので最初に処理される
-      inDegree[fileName] = 0;
+    if (dataformTable) {
+      const sqlx = new Sqlx(file, dataformTable);
+      sqlxObjects.push(sqlx);
     }
   });
 
-  // DataformProject の tables について依存関係を構築
+  // 依存関係を設定
   dataformProject.tables.forEach((table) => {
     const fileName = table.fileName;
     if (refactoringFiles.includes(fileName)) {
-      // dependencyTargets が null の場合も考慮して処理
       if (table.dependencyTargets && table.dependencyTargets.length > 0) {
         table.dependencyTargets.forEach((dependency) => {
-          // tables と declarations 両方から依存ファイルを探す
+          // 依存ファイルを探す
           const depFile =
             dataformProject.tables.find(
               (t) =>
@@ -88,35 +82,72 @@ const topoSortRefactoringFiles = (
                 d.target.schema === dependency.schema
             )?.fileName;
 
-          if (depFile && refactoringFiles.includes(depFile)) {
-            graph[depFile].push(fileName); // 依存元 -> 依存先
-            inDegree[fileName] += 1; // 依存されるファイルの入次数を増やす
+          // dependentSqlx が refactoringFiles に含まれない場合も初期化
+          let dependentSqlx = sqlxObjects.find(
+            (sqlx) => sqlx.filePath === depFile
+          );
+          if (!dependentSqlx && depFile) {
+            const dependentTable =
+              dataformProject.tables.find(
+                (table) => table.fileName === depFile
+              ) ||
+              dataformProject.declarations.find(
+                (table) => table.fileName === depFile
+              );
+
+            if (dependentTable) {
+              dependentSqlx = new Sqlx(depFile, dependentTable);
+              sqlxObjects.push(dependentSqlx); // 新たに作成した dependentSqlx を追加
+            }
+          }
+
+          // currentSqlx の依存関係として追加
+          const currentSqlx = sqlxObjects.find(
+            (sqlx) => sqlx.filePath === fileName
+          );
+          if (dependentSqlx && currentSqlx) {
+            currentSqlx.addDependency(dependentSqlx);
           }
         });
-      } else {
-        // dependencyTargets が null の場合は最初に処理するため入次数を 0 に設定
-        inDegree[fileName] = 0;
       }
     }
   });
 
-  // トポロジカルソートの実施
-  const sorted: string[] = [];
+  return sqlxObjects;
+};
+
+// トポロジカルソート関数でソートに集中
+const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
+  const graph: Record<string, string[]> = {};
+  const inDegree: Record<string, number> = {};
+
+  sqlxObjects.forEach((sqlx) => {
+    graph[sqlx.filePath] = [];
+    inDegree[sqlx.filePath] = 0;
+  });
+
+  sqlxObjects.forEach((sqlx) => {
+    sqlx.dependencies.forEach((dependency) => {
+      graph[dependency.filePath].push(sqlx.filePath);
+      inDegree[sqlx.filePath] += 1;
+    });
+  });
+
+  const sorted: Sqlx[] = [];
   const queue: string[] = [];
 
-  // 入次数が 0 のファイルをキューに追加
-  Object.keys(inDegree).forEach((file) => {
-    if (inDegree[file] === 0) {
-      queue.push(file);
+  Object.keys(inDegree).forEach((filePath) => {
+    if (inDegree[filePath] === 0) {
+      queue.push(filePath);
     }
   });
 
   while (queue.length > 0) {
-    const file = queue.shift()!;
-    sorted.push(file);
+    const filePath = queue.shift()!;
+    const sqlx = sqlxObjects.find((sqlx) => sqlx.filePath === filePath)!;
+    sorted.push(sqlx);
 
-    // 依存ファイルの入次数を減らす
-    graph[file].forEach((depFile) => {
+    graph[filePath].forEach((depFile) => {
       inDegree[depFile] -= 1;
       if (inDegree[depFile] === 0) {
         queue.push(depFile);
@@ -124,21 +155,24 @@ const topoSortRefactoringFiles = (
     });
   }
 
-  // サイクルが存在する場合、ソートがすべてのファイルに適用されない
-  if (sorted.length !== refactoringFiles.length) {
+  if (sorted.length !== sqlxObjects.length) {
     throw new Error("There is a circular dependency in the sqlx files.");
   }
 
   return sorted;
 };
 
+// refactor 関数
 export const refactor = async (filePath: string) => {
   const files = refactoringFiles(filePath);
-  console.log("files: ", files);
 
-  const result = await compileDataform();
-  const sortedFiles = topoSortRefactoringFiles(files, result);
-  console.log("sorted files: ", sortedFiles);
+  const result: DataformProject = await compileDataform();
+
+  // Sqlx オブジェクトを初期化して依存関係を設定
+  const sqlxObjects = initializeSqlxObjects(files, result);
+
+  // Sqlx オブジェクトをトポロジカルソート
+  const sortedSqlxFiles = topoSortRefactoringFiles(sqlxObjects);
 
   const bigqueryTables: BigQueryTable[] = [];
   const datasetIds = Array.from(
@@ -148,37 +182,25 @@ export const refactor = async (filePath: string) => {
         .map((table) => table.target.schema)
     )
   );
+
   for (const dataset of datasetIds) {
     const bqTables = await listTablesAndColumns(dataset);
     bigqueryTables.push(...bqTables);
   }
-  sortedFiles.forEach((file) => {
-    const sqlx = new Sqlx(file);
-    // DataformProject から対応するテーブルを取得（ファイル名ではなく target 情報を使用）
-    const dataformTable =
-      result.tables.find((table) => table.fileName === file) ||
-      result.declarations.find((table) => table.fileName === file);
 
-    if (dataformTable) {
-      const { schema, name } = dataformTable.target;
+  sortedSqlxFiles.forEach((sqlx) => {
+    const { schema, name } = sqlx.dataformTable.target;
 
-      // DataformProject のテーブル情報を基に BigQueryTable を探す
-      const bigQueryTable = bigqueryTables.find(
-        (table) => table.dataset === schema && table.table === name
-      );
+    const bigQueryTable = bigqueryTables.find(
+      (table) => table.dataset === schema && table.table === name
+    );
 
-      if (bigQueryTable) {
-        // BigQuery からカラムを追加
-        sqlx.addColumnsFromBigQuery(bigQueryTable);
-
-        // カラムを BigQuery の順序に並び替え
-        // sqlx.reorderColumns(bigQueryTable);
-
-        // 更新をファイルに保存
-        sqlx.save();
-      } else {
-        console.log(`No BigQuery table found for ${file}`);
-      }
+    if (bigQueryTable) {
+      sqlx.addColumnsFromBigQuery(bigQueryTable);
+      sqlx.inheritColumnsFromDependencies();
+      sqlx.save();
+    } else {
+      console.log(`No BigQuery table found for ${sqlx.filePath}`);
     }
   });
 };

@@ -1,12 +1,15 @@
-import { BigQueryTable, DataformProject, SqlxConfig } from "./dataformTypes";
+import { BigQueryTable, DataformTable, SqlxConfig } from "./dataformTypes";
 import * as fs from "fs";
 
 class Sqlx {
+  public filePath: string;
   private config: SqlxConfig;
-  private filePath: string;
+  dependencies: Sqlx[] = []; // 依存関係のテーブルを保持
+  public dataformTable: DataformTable; // DataformTable を保持
 
-  constructor(sqlxFilePath: string) {
+  constructor(sqlxFilePath: string, dataformTable: DataformTable) {
     this.filePath = sqlxFilePath;
+    this.dataformTable = dataformTable; // DataformTable を保持
     this.config = this.loadConfig();
   }
 
@@ -33,13 +36,32 @@ class Sqlx {
     return config;
   }
 
+  // 依存関係を追加するメソッド
+  addDependency(dependencySqlx: Sqlx) {
+    this.dependencies.push(dependencySqlx);
+  }
+
+  // 参照元のカラムを引き継ぐメソッド（同じ名前のカラムのみ）
+  inheritColumnsFromDependencies() {
+    this.dependencies.forEach((dependency) => {
+      Object.keys(dependency.config.columns || {}).forEach((columnName) => {
+        if (
+          this.config.columns &&
+          Object.keys(this.config.columns).includes(columnName) &&
+          dependency.config.columns &&
+          Object.keys(dependency.config.columns).includes(columnName)
+        ) {
+          this.config.columns[columnName] =
+            dependency.config.columns[columnName];
+        }
+      });
+    });
+  }
+
   // BigQuery のカラムを追加するメソッド
   addColumnsFromBigQuery(bigQueryTable: BigQueryTable) {
-    console.log(this.config.columns);
-    console.log(bigQueryTable.fields);
     bigQueryTable.fields.forEach((field) => {
       if (!this.config.columns || !this.config.columns[field.name]) {
-        // カラムがない場合は追加
         this.config.columns = {
           ...this.config.columns,
           [field.name]: field.policy_tags
@@ -50,25 +72,12 @@ class Sqlx {
             : field.description || "",
         };
       }
-      console.log(field)
-      console.log(this.config.columns);
     });
-  }
-
-  // カラムの順序を BigQuery の順序に合わせるメソッド
-  reorderColumns(bigQueryTable: BigQueryTable) {
-    const orderedColumns: SqlxConfig["columns"] = {};
-    bigQueryTable.fields.forEach((field) => {
-      if (this.config.columns && this.config.columns[field.name]) {
-        orderedColumns[field.name] = this.config.columns[field.name];
-      }
-    });
-    this.config.columns = orderedColumns;
   }
 
   // SQLX ファイルに更新を保存するメソッド
   save() {
-    console.log(this.config)
+    console.log(this.config);
     const newConfigBlock = `config ${JSON.stringify(this.config, null, 2)}`;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
     const updatedSqlxContent = sqlxContent.replace(

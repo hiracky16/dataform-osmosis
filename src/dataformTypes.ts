@@ -85,4 +85,4 @@ class DataformOsmosisTable {
   }
 }
 
-export type { DataformProject, Sqlx, DataformOsmosisTable, BigQueryTable };
+export type { DataformProject, Sqlx, DataformOsmosisTable, BigQueryTable, DataformTable };
