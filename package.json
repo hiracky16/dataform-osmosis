@@ -4,7 +4,7 @@
   "description": "dataform osmosis",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node ./bin/main.js"
   },
   "dependencies": {
@@ -17,5 +17,12 @@
   "license": "ISC",
   "bin": {
     "dataform-osmosis": "./bin/main.js"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.13",
+    "@types/mock-fs": "^4.13.4",
+    "jest": "^29.7.0",
+    "mock-fs": "^5.3.0",
+    "ts-jest": "^29.2.5"
   }
 }
