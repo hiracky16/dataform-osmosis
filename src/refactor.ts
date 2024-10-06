@@ -97,7 +97,7 @@ const initializeSqlxObjects = (
 
             if (dependentTable) {
               dependentSqlx = new Sqlx(depFile, dependentTable);
-              sqlxObjects.push(dependentSqlx); // 新たに作成した dependentSqlx を追加
+              //   sqlxObjects.push(dependentSqlx); // 新たに作成した dependentSqlx を追加
             }
           }
 
@@ -128,8 +128,13 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
 
   sqlxObjects.forEach((sqlx) => {
     sqlx.dependencies.forEach((dependency) => {
-      graph[dependency.filePath].push(sqlx.filePath);
-      inDegree[sqlx.filePath] += 1;
+      const dependencySqlx = sqlxObjects.find(
+        (sqlx) => sqlx.filePath === dependency.filePath
+      )!;
+      if (dependencySqlx) {
+        graph[dependency.filePath].push(sqlx.filePath);
+        inDegree[sqlx.filePath] += 1;
+      }
     });
   });
 
@@ -155,6 +160,8 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
     });
   }
 
+  console.log(sorted);
+  console.log(sqlxObjects);
   if (sorted.length !== sqlxObjects.length) {
     throw new Error("There is a circular dependency in the sqlx files.");
   }

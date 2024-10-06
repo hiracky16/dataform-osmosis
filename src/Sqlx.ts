@@ -77,7 +77,6 @@ class Sqlx {
 
   // SQLX ファイルに更新を保存するメソッド
   save() {
-    console.log(this.config);
     const newConfigBlock = `config ${JSON.stringify(this.config, null, 2)}`;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
     const updatedSqlxContent = sqlxContent.replace(
