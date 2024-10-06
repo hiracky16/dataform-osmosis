@@ -36,9 +36,7 @@ program
   )
   .description("Refactor the current Dataform project")
   .action(async (options) => {
-    const files = refactoringFiles(options.file)
-    console.log("Refactoring: \n", files)
-    await refactor(files);
+    await refactor(options.file);
   });
 
 // コマンドライン引数を解析
