@@ -1,25 +1,20 @@
 type Sqlx = {
-  config: {
-    type:
-      | "table"
-      | "view"
-      | "incremental"
-      | "declaration"
-      | "assertion"
-      | "test";
-    schema?: string;
-    columns?: {
-      [columnName: string]:
-        | {
-            description: string;
-            bigqueryPolicyTags: string | string[];
-          }
-        | string;
-    };
-  };
-
+  config: SqlxConfig;
   path: string;
   content: string;
+};
+
+export type SqlxConfig = {
+  type: "table" | "view" | "incremental" | "declaration" | "assertion" | "test";
+  schema?: string;
+  columns?: {
+    [columnName: string]:
+      | {
+          description: string;
+          bigqueryPolicyTags: string | string[];
+        }
+      | string;
+  };
 };
 
 type Target = {
@@ -70,6 +65,7 @@ type BigQueryTable = {
   fields: {
     name: string;
     description?: string;
+    policy_tags?: {names: string[]};
   }[];
 };
 

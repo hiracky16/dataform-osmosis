@@ -1,8 +1,9 @@
 import { readSqlx, compileDataform, checkDataformCli } from "./dataform";
 import { listTablesAndColumns, checkBigQuery } from "./bigquery";
-import { DataformProject } from "./dataformTypes";
+import { DataformProject, BigQueryTable } from "./dataformTypes";
 import path from "path";
 import fs from "fs";
+import Sqlx from "./Sqlx";
 
 export const refactoringFiles = (filePath: string): string[] => {
   // definitions/ を省略したディレクトリ指定への対応
@@ -134,7 +135,50 @@ const topoSortRefactoringFiles = (
 export const refactor = async (filePath: string) => {
   const files = refactoringFiles(filePath);
   console.log("files: ", files);
+
   const result = await compileDataform();
   const sortedFiles = topoSortRefactoringFiles(files, result);
   console.log("sorted files: ", sortedFiles);
+
+  const bigqueryTables: BigQueryTable[] = [];
+  const datasetIds = Array.from(
+    new Set(
+      result.declarations
+        .concat(result.tables)
+        .map((table) => table.target.schema)
+    )
+  );
+  for (const dataset of datasetIds) {
+    const bqTables = await listTablesAndColumns(dataset);
+    bigqueryTables.push(...bqTables);
+  }
+  sortedFiles.forEach((file) => {
+    const sqlx = new Sqlx(file);
+    // DataformProject から対応するテーブルを取得（ファイル名ではなく target 情報を使用）
+    const dataformTable =
+      result.tables.find((table) => table.fileName === file) ||
+      result.declarations.find((table) => table.fileName === file);
+
+    if (dataformTable) {
+      const { schema, name } = dataformTable.target;
+
+      // DataformProject のテーブル情報を基に BigQueryTable を探す
+      const bigQueryTable = bigqueryTables.find(
+        (table) => table.dataset === schema && table.table === name
+      );
+
+      if (bigQueryTable) {
+        // BigQuery からカラムを追加
+        sqlx.addColumnsFromBigQuery(bigQueryTable);
+
+        // カラムを BigQuery の順序に並び替え
+        // sqlx.reorderColumns(bigQueryTable);
+
+        // 更新をファイルに保存
+        sqlx.save();
+      } else {
+        console.log(`No BigQuery table found for ${file}`);
+      }
+    }
+  });
 };
