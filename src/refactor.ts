@@ -160,8 +160,6 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
     });
   }
 
-  console.log(sorted);
-  console.log(sqlxObjects);
   if (sorted.length !== sqlxObjects.length) {
     throw new Error("There is a circular dependency in the sqlx files.");
   }
