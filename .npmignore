@@ -7,7 +7,8 @@ src
 test
 .github
 definitions
-Docker
+Dockerfile
 docker-compose.yml
-jest.config.json
+jest.config.js
 tsconfig.json
+README.md

@@ -10,6 +10,7 @@ const WORKFLOW_SETTINGS_PATH = path.resolve(
   process.cwd(),
   "workflow_settings.yaml"
 );
+const WORKFLOW_SETTINGS_OLD_PATH = path.resolve(process.cwd(), "dataform.json");
 
 export const checkDataformCli = async () => {
   const { stdout, stderr } = await execAsync("dataform --version");
@@ -43,10 +44,15 @@ export const compileDataform = async (): Promise<DataformProject> => {
 };
 
 export const loadWorkflowSettings = (): WorkflowSettings => {
-  if (!fs.existsSync(WORKFLOW_SETTINGS_PATH)) {
+  let config: WorkflowSettings;
+  if (fs.existsSync(WORKFLOW_SETTINGS_PATH)) {
+    const fileContent = fs.readFileSync(WORKFLOW_SETTINGS_PATH, "utf8");
+    config = yaml.parse(fileContent) as WorkflowSettings;
+  } else if (fs.existsSync(WORKFLOW_SETTINGS_OLD_PATH)) {
+    const fileContent = fs.readFileSync(WORKFLOW_SETTINGS_OLD_PATH, "utf8");
+    config = JSON.parse(fileContent) as WorkflowSettings;
+  } else {
     throw new Error("workflow_settings.yaml file not found.");
   }
-  const fileContent = fs.readFileSync(WORKFLOW_SETTINGS_PATH, "utf8");
-  const config = yaml.parse(fileContent) as WorkflowSettings;
   return config;
 };
