@@ -1,5 +1,5 @@
 type Sqlx = {
-  config: SqlxConfig;
+  config: SqlxConfig | OverridedSqlxConfig;
   path: string;
   content: string;
 };
@@ -14,6 +14,17 @@ export type SqlxConfig = {
           bigqueryPolicyTags?: string | string[];
         }
       | string;
+  };
+};
+
+export type OverridedSqlxConfig = {
+  type: "table" | "view" | "incremental" | "declaration" | "assertion" | "test";
+  schema?: string;
+  columns?: {
+    [columnName: string]: {
+      description: string;
+      bigqueryPolicyTags?: string | string[];
+    };
   };
 };
 
@@ -65,7 +76,7 @@ type BigQueryTable = {
   fields: {
     name: string;
     description?: string;
-    policy_tags?: {names: string[]};
+    policy_tags?: { names: string[] };
   }[];
 };
 
@@ -85,4 +96,18 @@ class DataformOsmosisTable {
   }
 }
 
-export type { DataformProject, Sqlx, DataformOsmosisTable, BigQueryTable, DataformTable };
+type WorkflowSettings = {
+  defaultProject: string;
+  defaultLocation: string;
+  defaultDataset: string;
+  defaultAssertionDataset: string;
+};
+
+export type {
+  DataformProject,
+  Sqlx,
+  DataformOsmosisTable,
+  BigQueryTable,
+  DataformTable,
+  WorkflowSettings,
+};

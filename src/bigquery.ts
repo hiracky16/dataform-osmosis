@@ -1,14 +1,9 @@
 import { BigQuery } from "@google-cloud/bigquery";
-import { BigQueryTable } from "./dataformTypes";
+import { BigQueryTable, WorkflowSettings } from "./dataformTypes";
 
-const PROJECT_ID = process.env.PROJECT_ID || "";
-
-const bigquery = new BigQuery({
-  projectId: PROJECT_ID,
-});
-
-export const checkBigQuery = async () => {
+export const checkBigQuery = async (projectId: string) => {
   try {
+    const bigquery = new BigQuery({ projectId });
     const project = await bigquery.getProjectId();
     console.log(`✅️ BigQuery client is working. Using ${project} project.`);
   } catch (err) {
@@ -17,8 +12,10 @@ export const checkBigQuery = async () => {
 };
 
 export const listTablesAndColumns = async (
+  projectId: string,
   datasetId: string
 ): Promise<BigQueryTable[]> => {
+  const bigquery = new BigQuery({ projectId });
   const dataset = bigquery.dataset(datasetId);
   const bigqueryTables = [];
   try {

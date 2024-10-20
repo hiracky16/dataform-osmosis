@@ -1,5 +1,5 @@
-import { readSqlx, compileDataform, checkDataformCli } from "./dataform";
-import { listTablesAndColumns, checkBigQuery } from "./bigquery";
+import { compileDataform, loadWorkflowSettings } from "./dataform";
+import { listTablesAndColumns } from "./bigquery";
 import { DataformProject, BigQueryTable } from "./dataformTypes";
 import path from "path";
 import fs from "fs";
@@ -170,6 +170,7 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
 // refactor 関数
 export const refactor = async (filePath: string) => {
   const files = refactoringFiles(filePath);
+  const config = loadWorkflowSettings()
 
   const result: DataformProject = await compileDataform();
 
@@ -189,7 +190,7 @@ export const refactor = async (filePath: string) => {
   );
 
   for (const dataset of datasetIds) {
-    const bqTables = await listTablesAndColumns(dataset);
+    const bqTables = await listTablesAndColumns(config.defaultProject, dataset);
     bigqueryTables.push(...bqTables);
   }
 
