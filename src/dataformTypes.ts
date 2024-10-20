@@ -7,7 +7,7 @@ type Sqlx = {
 export type SqlxConfig = {
   type: "table" | "view" | "incremental" | "declaration" | "assertion" | "test";
   schema?: string;
-  columns?: {
+  columns: {
     [columnName: string]: {
       description: string;
       bigqueryPolicyTags?: string | string[];

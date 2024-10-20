@@ -51,6 +51,7 @@ class Sqlx {
     }
 
     if (!config.columns) {
+      config.columns = {}
       return config;
     }
 
@@ -79,9 +80,7 @@ class Sqlx {
     this.dependencies.forEach((dependency) => {
       Object.keys(dependency.config.columns || {}).forEach((columnName) => {
         if (
-          dependency.config.columns &&
           Object.keys(dependency.config.columns).includes(columnName) &&
-          this.config.columns &&
           (!Object.keys(this.config.columns).includes(columnName) ||
             (Object.keys(this.config.columns).includes(columnName) &&
               this.config.columns[columnName].description.length === 0))
