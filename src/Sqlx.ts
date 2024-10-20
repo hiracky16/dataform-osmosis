@@ -11,19 +11,25 @@ class Sqlx {
     this.filePath = sqlxFilePath;
     this.dataformTable = dataformTable; // DataformTable を保持
     this.config = this.loadConfig();
+    this.nomarizeColumns()
   }
 
   // SQLX ファイルの config を読み込む
   private loadConfig(): SqlxConfig {
+    let config: SqlxConfig;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
     const configMatch = sqlxContent.match(
       /config\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/
     );
     if (!configMatch) {
-      throw new Error(`No config block found in ${this.filePath}`);
+      console.info(`No config block found in ${this.filePath}`);
+      config = {
+        type: "table",
+        columns: {},
+      };
+      return config;
     }
 
-    let config: SqlxConfig;
     try {
       const configContent = configMatch[0]
         .replace(/config\s*/, "")
@@ -34,6 +40,20 @@ class Sqlx {
       throw new Error(`Failed to parse config in ${this.filePath}: ${error}`);
     }
     return config;
+  }
+
+  private nomarizeColumns(): void {
+    if (!this.config.columns) return;
+
+    Object.keys(this.config.columns).forEach((columnName) => {
+      const column = this.config.columns![columnName];
+
+      if (typeof column === "string") {
+        this.config.columns![columnName] = {
+          description: column
+        };
+      }
+    });
   }
 
   // 依存関係を追加するメソッド
@@ -84,7 +104,7 @@ class Sqlx {
       newConfigBlock
     );
     fs.writeFileSync(this.filePath, updatedSqlxContent, "utf-8");
-    console.log(`Updated SQLX file: ${this.filePath}`);
+    console.log(`🔨 Updated SQLX file: ${this.filePath}`);
   }
 }
 

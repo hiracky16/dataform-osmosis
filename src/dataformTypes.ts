@@ -11,7 +11,7 @@ export type SqlxConfig = {
     [columnName: string]:
       | {
           description: string;
-          bigqueryPolicyTags: string | string[];
+          bigqueryPolicyTags?: string | string[];
         }
       | string;
   };
