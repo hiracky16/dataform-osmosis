@@ -15,17 +15,6 @@ export type SqlxConfig = {
   };
 };
 
-export type OverridedSqlxConfig = {
-  type: "table" | "view" | "incremental" | "declaration" | "assertion" | "test";
-  schema?: string;
-  columns?: {
-    [columnName: string]: {
-      description: string;
-      bigqueryPolicyTags?: string | string[];
-    };
-  };
-};
-
 type Target = {
   schema: string;
   name: string;
