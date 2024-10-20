@@ -8,12 +8,10 @@ export type SqlxConfig = {
   type: "table" | "view" | "incremental" | "declaration" | "assertion" | "test";
   schema?: string;
   columns?: {
-    [columnName: string]:
-      | {
-          description: string;
-          bigqueryPolicyTags?: string | string[];
-        }
-      | string;
+    [columnName: string]: {
+      description: string;
+      bigqueryPolicyTags?: string | string[];
+    };
   };
 };
 

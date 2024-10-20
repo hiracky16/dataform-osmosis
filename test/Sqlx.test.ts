@@ -7,7 +7,7 @@ jest.mock("fs");
 
 describe("Sqlx", () => {
   const mockFilePath = "definitions/table1.sqlx";
-  const mockConfigContent = `
+  let mockConfigContent = `
     config {
       type: "table",
       columns: {
@@ -19,7 +19,6 @@ describe("Sqlx", () => {
       }
     }
   `;
-
   const mockDataformTable: DataformTable = {
     type: "table",
     target: {
@@ -62,13 +61,15 @@ describe("Sqlx", () => {
 
       expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, "utf-8");
       expect(sqlx["config"].type).toBe("table");
-      expect(sqlx["config"].columns).toHaveProperty("id", {"description": "id"});
+      expect(sqlx["config"].columns).toHaveProperty("id", {
+        description: "id",
+      });
       expect(sqlx["config"].columns).toHaveProperty("name");
     });
 
     it("should set empty config value if no config block is found", () => {
       (fs.readFileSync as jest.Mock).mockReturnValue("select 1");
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable)
+      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
       expect(sqlx["config"]).toHaveProperty("type");
     });
   });
@@ -90,14 +91,16 @@ describe("Sqlx", () => {
       const sqlx = new Sqlx(mockFilePath, mockDataformTable);
       const dependencySqlx = new Sqlx(mockFilePath, mockDataformTable);
       if (dependencySqlx["config"].columns) {
-        dependencySqlx["config"].columns["id"] = "new-id-description";
+        dependencySqlx["config"].columns["id"] = {
+          description: "new-id-description",
+        };
       }
 
       sqlx.addDependency(dependencySqlx);
       sqlx.inheritColumnsFromDependencies();
 
       if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["id"]).toBe("new-id-description");
+        expect(sqlx["config"].columns["id"]).toStrictEqual({ description: "id" });
       }
     });
   });
@@ -119,7 +122,9 @@ describe("Sqlx", () => {
 
       expect(sqlx["config"].columns).toHaveProperty("age");
       if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["age"]).toBe("age description");
+        expect(sqlx["config"].columns["age"]).toStrictEqual({
+          description: "age description",
+        });
       }
     });
   });

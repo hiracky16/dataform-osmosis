@@ -1,22 +1,32 @@
 import { BigQueryTable, DataformTable, SqlxConfig } from "./dataformTypes";
 import * as fs from "fs";
 
+type FileSqlxConfig = SqlxConfig & {
+  columns?: {
+    [columnName: string]:
+      | {
+          description: string;
+          bigqueryPolicyTags?: string | string[];
+        }
+      | string;
+  };
+};
+
 class Sqlx {
   public filePath: string;
   private config: SqlxConfig;
-  dependencies: Sqlx[] = []; // 依存関係のテーブルを保持
-  public dataformTable: DataformTable; // DataformTable を保持
+  dependencies: Sqlx[] = [];
+  public dataformTable: DataformTable;
 
   constructor(sqlxFilePath: string, dataformTable: DataformTable) {
     this.filePath = sqlxFilePath;
     this.dataformTable = dataformTable; // DataformTable を保持
     this.config = this.loadConfig();
-    this.nomarizeColumns()
   }
 
   // SQLX ファイルの config を読み込む
   private loadConfig(): SqlxConfig {
-    let config: SqlxConfig;
+    let config: FileSqlxConfig;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
     const configMatch = sqlxContent.match(
       /config\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/
@@ -39,21 +49,24 @@ class Sqlx {
     } catch (error) {
       throw new Error(`Failed to parse config in ${this.filePath}: ${error}`);
     }
-    return config;
-  }
 
-  private nomarizeColumns(): void {
-    if (!this.config.columns) return;
+    if (!config.columns) {
+      return config;
+    }
 
-    Object.keys(this.config.columns).forEach((columnName) => {
-      const column = this.config.columns![columnName];
+    Object.keys(config.columns).forEach((columnName) => {
+      const column = config.columns![columnName];
 
       if (typeof column === "string") {
-        this.config.columns![columnName] = {
-          description: column
+        config.columns![columnName] = {
+          description: column,
         };
+      } else {
+        config.columns![columnName] = column;
       }
     });
+
+    return config;
   }
 
   // 依存関係を追加するメソッド
@@ -66,10 +79,12 @@ class Sqlx {
     this.dependencies.forEach((dependency) => {
       Object.keys(dependency.config.columns || {}).forEach((columnName) => {
         if (
-          this.config.columns &&
-          Object.keys(this.config.columns).includes(columnName) &&
           dependency.config.columns &&
-          Object.keys(dependency.config.columns).includes(columnName)
+          Object.keys(dependency.config.columns).includes(columnName) &&
+          this.config.columns &&
+          (!Object.keys(this.config.columns).includes(columnName) ||
+            (Object.keys(this.config.columns).includes(columnName) &&
+              this.config.columns[columnName].description.length === 0))
         ) {
           this.config.columns[columnName] =
             dependency.config.columns[columnName];
@@ -89,7 +104,9 @@ class Sqlx {
                 description: field.description || "",
                 bigqueryPolicyTags: field.policy_tags?.names || [],
               }
-            : field.description || "",
+            : {
+                description: field.description || "",
+              },
         };
       }
     });
