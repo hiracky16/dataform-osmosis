@@ -62,15 +62,14 @@ describe("Sqlx", () => {
 
       expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, "utf-8");
       expect(sqlx["config"].type).toBe("table");
-      expect(sqlx["config"].columns).toHaveProperty("id", "id");
+      expect(sqlx["config"].columns).toHaveProperty("id", {"description": "id"});
       expect(sqlx["config"].columns).toHaveProperty("name");
     });
 
-    it("should throw an error if no config block is found", () => {
-      (fs.readFileSync as jest.Mock).mockReturnValue("invalid content");
-      expect(() => new Sqlx(mockFilePath, mockDataformTable)).toThrowError(
-        "No config block found"
-      );
+    it("should set empty config value if no config block is found", () => {
+      (fs.readFileSync as jest.Mock).mockReturnValue("select 1");
+      const sqlx = new Sqlx(mockFilePath, mockDataformTable)
+      expect(sqlx["config"]).toHaveProperty("type");
     });
   });
 
