@@ -17,6 +17,9 @@ type FileSqlxConfig = SqlxConfig & {
   };
 };
 
+const CONFIG_BLOCK_PATTERN =
+  /config\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/;
+
 class Sqlx {
   public filePath: string;
   private config: SqlxConfig;
@@ -33,9 +36,7 @@ class Sqlx {
   private loadConfig(): SqlxConfig {
     let config: FileSqlxConfig;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
-    const configMatch = sqlxContent.match(
-      /config\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/
-    );
+    const configMatch = sqlxContent.match(CONFIG_BLOCK_PATTERN);
     if (!configMatch) {
       console.info(`No config block found in ${this.filePath}`);
       config = {
@@ -103,6 +104,11 @@ class Sqlx {
             (d) =>
               d.target.name === dependency.name &&
               d.target.schema === dependency.schema
+          ) ||
+          dataformProject.operations.find(
+            (d) =>
+              d.target.name === dependency.name &&
+              d.target.schema === dependency.schema
           );
 
         if (dependentTable) {
@@ -117,13 +123,6 @@ class Sqlx {
 
     this.dependencies.forEach((dependency) => {
       Object.keys(dependency.config.columns || {}).forEach((columnName) => {
-        if (
-          Object.keys(dependency.config.columns).includes(columnName) &&
-          !Object.keys(this.config.columns).includes(columnName)
-        ) {
-          this.config.columns[columnName] =
-            dependency.config.columns[columnName];
-        }
         if (
           Object.keys(dependency.config.columns).includes(columnName) &&
           Object.keys(this.config.columns).includes(columnName) &&
@@ -150,7 +149,7 @@ class Sqlx {
   // BigQuery のカラムを追加するメソッド
   addColumnsFromBigQuery(bigQueryTable: BigQueryTable) {
     bigQueryTable.fields.forEach((field) => {
-      if (!this.config.columns || !this.config.columns[field.name]) {
+      if (!this.config.columns[field.name]) {
         this.config.columns = {
           ...this.config.columns,
           [field.name]: field.policy_tags
@@ -164,16 +163,25 @@ class Sqlx {
         };
       }
     });
+    console.log(this.config.columns);
   }
 
   // SQLX ファイルに更新を保存するメソッド
   save() {
+    console.log(this.config.columns);
     const newConfigBlock = `config ${JSON.stringify(this.config, null, 2)}`;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
-    const updatedSqlxContent = sqlxContent.replace(
-      /config\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/,
-      newConfigBlock
-    );
+    const configMatch = sqlxContent.match(CONFIG_BLOCK_PATTERN);
+    let updatedSqlxContent = "";
+    if (configMatch) {
+      updatedSqlxContent = sqlxContent.replace(
+        CONFIG_BLOCK_PATTERN,
+        newConfigBlock
+      );
+    } else {
+      updatedSqlxContent = `${newConfigBlock}\n${sqlxContent}`;
+    }
+
     fs.writeFileSync(this.filePath, updatedSqlxContent, "utf-8");
     console.info(`🔨 Updated SQLX file: ${this.filePath}`);
   }

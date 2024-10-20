@@ -1,8 +1,1 @@
-config {
-  "type": "table",
-  "columns": {
-    "id": "id",
-    "value": ""
-  }
-}
 select 1 from ${ref('table1')}

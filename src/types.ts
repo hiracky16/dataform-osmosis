@@ -43,6 +43,7 @@ type DataformTable = {
 type DataformProject = {
   tables: DataformTable[];
   declarations: DataformTable[];
+  operations: DataformTable[];
   projectConfig: {
     warehouse: string;
     defaultSchema: string;

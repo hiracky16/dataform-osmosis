@@ -84,6 +84,7 @@ describe("Sqlx", () => {
       },
     ],
     declarations: [],
+    operations: [],
     projectConfig: {
       warehouse: "bigquery",
       defaultSchema: "dataform",

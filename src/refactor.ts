@@ -55,7 +55,8 @@ const initializeSqlxObjects = (
   refactoringFiles.forEach((file) => {
     const dataformTable =
       dataformProject.tables.find((table) => table.fileName === file) ||
-      dataformProject.declarations.find((table) => table.fileName === file);
+      dataformProject.declarations.find((table) => table.fileName === file) ||
+      dataformProject.operations.find((table) => table.fileName === file);
 
     if (dataformTable) {
       const sqlx = new Sqlx(file, dataformTable);
@@ -135,6 +136,7 @@ export const refactor = async (filePath: string) => {
     new Set(
       result.declarations
         .concat(result.tables)
+        .concat(result.operations)
         .map((table) => table.target.schema)
     )
   );
