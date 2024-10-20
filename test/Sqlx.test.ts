@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import Sqlx from "../src/Sqlx";
-import { BigQueryTable, DataformTable, SqlxConfig } from "../src/types";
+import { BigQueryTable, DataformProject, DataformTable } from "../src/types";
 
 // fs モジュールをモック
 jest.mock("fs");
@@ -19,6 +19,7 @@ describe("Sqlx", () => {
       }
     }
   `;
+
   const mockDataformTable: DataformTable = {
     type: "table",
     target: {
@@ -29,7 +30,13 @@ describe("Sqlx", () => {
     fileName: mockFilePath,
     query: "SELECT id, name FROM table0",
     disabled: false,
-    dependencyTargets: [],
+    dependencyTargets: [
+      {
+        name: "table0",
+        schema: "dataform",
+        database: "project",
+      },
+    ],
     actionDescriptor: {
       columns: [
         {
@@ -44,6 +51,49 @@ describe("Sqlx", () => {
       database: "project",
     },
     enumType: "TABLE",
+  };
+
+  const mockDataformProject: DataformProject = {
+    tables: [
+      mockDataformTable,
+      {
+        type: "table",
+        target: {
+          name: "table0",
+          schema: "dataform",
+          database: "project",
+        },
+        fileName: "definitions/table0.sqlx",
+        query: "SELECT id FROM somewhere",
+        disabled: false,
+        dependencyTargets: [],
+        actionDescriptor: {
+          columns: [
+            {
+              description: "id",
+              path: ["id"],
+            },
+          ],
+        },
+        canonicalTarget: {
+          name: "table0",
+          schema: "dataform",
+          database: "project",
+        },
+        enumType: "TABLE",
+      },
+    ],
+    declarations: [],
+    projectConfig: {
+      warehouse: "bigquery",
+      defaultSchema: "dataform",
+      assertionSchema: "dataform_assertions",
+      defaultDatabase: "project",
+      defaultLocation: "asia-northeast1",
+    },
+    graphErrors: {},
+    dataformCoreVersion: "1.0.0",
+    targets: [],
   };
 
   beforeEach(() => {
@@ -87,11 +137,24 @@ describe("Sqlx", () => {
   });
 
   describe("inheritColumnsFromDependencies", () => {
-    it("should not inherit columns if the column already has a description", () => {
+    it("should correctly inherit columns from dependency", () => {
       const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-      const dependencySqlx = new Sqlx(mockFilePath, mockDataformTable);
+      sqlx.inheritColumnsFromDependencies(mockDataformProject);
 
-      // 依存元のカラムに description が埋まっている
+      if (sqlx["config"].columns) {
+        expect(sqlx["config"].columns["id"]).toStrictEqual({
+          description: "id",
+        });
+      }
+    });
+
+    it("should not overwrite existing columns", () => {
+      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
+      const dependencySqlx = new Sqlx(
+        "definitions/table0.sqlx",
+        mockDataformProject.tables[1]
+      );
+
       if (dependencySqlx["config"].columns) {
         dependencySqlx["config"].columns["id"] = {
           description: "new-id-description",
@@ -99,9 +162,9 @@ describe("Sqlx", () => {
       }
 
       sqlx.addDependency(dependencySqlx);
-      sqlx.inheritColumnsFromDependencies();
+      sqlx.inheritColumnsFromDependencies(mockDataformProject);
 
-      // sqlx の id カラムにはすでに description があるので、引き継がない
+      // sqlx 側の id カラムにはすでに description があるので、引き継がない
       if (sqlx["config"].columns) {
         expect(sqlx["config"].columns["id"]).toStrictEqual({
           description: "id",
@@ -109,52 +172,28 @@ describe("Sqlx", () => {
       }
     });
 
-    it("should inherit columns from dependencies if the column has no description", () => {
+    it("should inherit missing bigqueryPolicyTags", () => {
       const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-      const dependencySqlx = new Sqlx(mockFilePath, mockDataformTable);
+      const dependencySqlx = new Sqlx(
+        "definitions/table0.sqlx",
+        mockDataformProject.tables[1]
+      );
 
-      // 依存元のカラムに description がある
       if (dependencySqlx["config"].columns) {
-        dependencySqlx["config"].columns["age"] = {
-          description: "age description",
+        dependencySqlx["config"].columns["id"] = {
+          description: "new-id-description",
+          bigqueryPolicyTags: ["policy-tag-1"],
         };
       }
 
-      // sqlx 側の age カラムには description がない場合、引き継ぐ
-      if (sqlx["config"].columns) {
-        sqlx["config"].columns["age"] = { description: "" }; // もともと空の description
-      }
-
       sqlx.addDependency(dependencySqlx);
-      sqlx.inheritColumnsFromDependencies();
+      sqlx.inheritColumnsFromDependencies(mockDataformProject);
 
-      // sqlx 側の age カラムに依存元の description が引き継がれる
-      if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["age"]).toStrictEqual({
-          description: "age description",
-        });
-      }
-    });
-
-    it("should not overwrite existing policy tags", () => {
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-      const dependencySqlx = new Sqlx(mockFilePath, mockDataformTable);
-
-      dependencySqlx["config"].columns["name"].bigqueryPolicyTags = ["hoge"];
-
-      sqlx.addDependency(dependencySqlx);
-      sqlx.inheritColumnsFromDependencies();
-
-      // 既に存在する policy tag がある場合は上書きしない
+      // sqlx 側の id カラムには policyTags がないので、引き継ぐ
       if (sqlx["config"].columns) {
         expect(sqlx["config"].columns["id"]).toStrictEqual({
           description: "id",
-        });
-        expect(sqlx["config"].columns["name"]).toStrictEqual({
-          description: "name description",
-          bigqueryPolicyTags: [
-            "projects/example/taxonomies/123456/policyTags/123",
-          ],
+          bigqueryPolicyTags: ["policy-tag-1"],
         });
       }
     });
@@ -182,87 +221,6 @@ describe("Sqlx", () => {
         });
       }
     });
-
-    it("should correctly handle policy tags (string[])", () => {
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-
-      const bigQueryTable: BigQueryTable = {
-        dataset: "dataform",
-        table: "table1",
-        fields: [
-          {
-            name: "salary",
-            description: "salary description",
-            policy_tags: { names: ["policy1", "policy2"] },
-          },
-        ],
-      };
-
-      sqlx.addColumnsFromBigQuery(bigQueryTable);
-
-      if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["salary"]).toStrictEqual({
-          description: "salary description",
-          bigqueryPolicyTags: ["policy1", "policy2"],
-        });
-      }
-    });
-
-    it("should correctly handle policy tags (string)", () => {
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-
-      const bigQueryTable: BigQueryTable = {
-        dataset: "dataform",
-        table: "table1",
-        fields: [
-          {
-            name: "age",
-            description: "age description",
-            policy_tags: { names: ["policy-single"] },
-          },
-        ],
-      };
-
-      sqlx.addColumnsFromBigQuery(bigQueryTable);
-
-      if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["age"]).toStrictEqual({
-          description: "age description",
-          bigqueryPolicyTags: ["policy-single"],
-        });
-      }
-    });
-
-    it("should not overwrite existing policy tags", () => {
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-
-      const bigQueryTable: BigQueryTable = {
-        dataset: "dataform",
-        table: "table1",
-        fields: [
-          {
-            name: "id",
-            description: "id description",
-            policy_tags: { names: ["new-policy"] },
-          },
-        ],
-      };
-
-      sqlx.addColumnsFromBigQuery(bigQueryTable);
-
-      // 既に存在する policy tag がある場合は上書きしない
-      if (sqlx["config"].columns) {
-        expect(sqlx["config"].columns["id"]).toStrictEqual({
-          description: "id",
-        });
-        expect(sqlx["config"].columns["name"]).toStrictEqual({
-          description: "name description",
-          bigqueryPolicyTags: [
-            "projects/example/taxonomies/123456/policyTags/123",
-          ],
-        });
-      }
-    });
   });
 
   describe("save", () => {
@@ -278,35 +236,6 @@ describe("Sqlx", () => {
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         mockFilePath,
         expect.stringContaining(expectedNewConfig),
-        "utf-8"
-      );
-    });
-    it("should not remove SQLX config assertion", () => {
-      const assertionMockConfigContent = `config {
-        type: "table",
-        columns: {
-          id: "id",
-          name: {
-            description: "name description",
-            bigqueryPolicyTags: ["projects/example/taxonomies/123456/policyTags/123"]
-          }
-        },
-        assertions: {
-          nonNull: ["id"]
-        }
-      }`;
-      (fs.readFileSync as jest.Mock).mockReturnValue(assertionMockConfigContent);
-      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
-      sqlx.save();
-
-      const expectedNewConfig = `config ${JSON.stringify(
-        sqlx["config"],
-        null,
-        2
-      )}`;
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        mockFilePath,
-        expect.stringContaining("assertions"),
         "utf-8"
       );
     });

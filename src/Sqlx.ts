@@ -1,4 +1,9 @@
-import { BigQueryTable, DataformTable, SqlxConfig } from "./types";
+import {
+  BigQueryTable,
+  DataformProject,
+  DataformTable,
+  SqlxConfig,
+} from "./types";
 import * as fs from "fs";
 
 type FileSqlxConfig = SqlxConfig & {
@@ -51,7 +56,7 @@ class Sqlx {
     }
 
     if (!config.columns) {
-      config.columns = {}
+      config.columns = {};
       return config;
     }
 
@@ -66,9 +71,9 @@ class Sqlx {
         config.columns[columnName] = column;
       }
 
-      const bigqueryPolicyTags = column.bigqueryPolicyTags
+      const bigqueryPolicyTags = column.bigqueryPolicyTags;
       if (bigqueryPolicyTags && typeof bigqueryPolicyTags === "string") {
-        config.columns[columnName].bigqueryPolicyTags = [bigqueryPolicyTags]
+        config.columns[columnName].bigqueryPolicyTags = [bigqueryPolicyTags];
       }
     });
 
@@ -81,17 +86,62 @@ class Sqlx {
   }
 
   // 参照元のカラムを引き継ぐメソッド（同じ名前のカラムのみ）
-  inheritColumnsFromDependencies() {
+  inheritColumnsFromDependencies(dataformProject: DataformProject) {
+    // 依存関係を設定
+    if (
+      this.dataformTable.dependencyTargets &&
+      this.dataformTable.dependencyTargets.length > 0
+    ) {
+      this.dataformTable.dependencyTargets.forEach((dependency) => {
+        const dependentTable =
+          dataformProject.tables.find(
+            (t) =>
+              t.target.name === dependency.name &&
+              t.target.schema === dependency.schema
+          ) ||
+          dataformProject.declarations.find(
+            (d) =>
+              d.target.name === dependency.name &&
+              d.target.schema === dependency.schema
+          );
+
+        if (dependentTable) {
+          const dependentSqlx = new Sqlx(
+            dependentTable.fileName,
+            dependentTable
+          );
+          this.addDependency(dependentSqlx);
+        }
+      });
+    }
+
     this.dependencies.forEach((dependency) => {
       Object.keys(dependency.config.columns || {}).forEach((columnName) => {
         if (
           Object.keys(dependency.config.columns).includes(columnName) &&
-          (!Object.keys(this.config.columns).includes(columnName) ||
-            (Object.keys(this.config.columns).includes(columnName) &&
-              this.config.columns[columnName].description.length === 0))
+          !Object.keys(this.config.columns).includes(columnName)
         ) {
           this.config.columns[columnName] =
             dependency.config.columns[columnName];
+        }
+        if (
+          Object.keys(dependency.config.columns).includes(columnName) &&
+          Object.keys(this.config.columns).includes(columnName) &&
+          dependency.config.columns[columnName].description.length > 0 &&
+          this.config.columns[columnName].description.length === 0
+        ) {
+          this.config.columns[columnName].description =
+            dependency.config.columns[columnName].description;
+        }
+
+        if (
+          Object.keys(dependency.config.columns).includes(columnName) &&
+          Object.keys(this.config.columns).includes(columnName) &&
+          dependency.config.columns[columnName].bigqueryPolicyTags &&
+          !this.config.columns[columnName].bigqueryPolicyTags
+        ) {
+          this.config.columns[columnName].bigqueryPolicyTags =
+            dependency.config.columns[columnName].bigqueryPolicyTags;
         }
       });
     });

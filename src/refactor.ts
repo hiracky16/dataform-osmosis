@@ -63,56 +63,6 @@ const initializeSqlxObjects = (
     }
   });
 
-  // 依存関係を設定
-  dataformProject.tables.forEach((table) => {
-    const fileName = table.fileName;
-    if (refactoringFiles.includes(fileName)) {
-      if (table.dependencyTargets && table.dependencyTargets.length > 0) {
-        table.dependencyTargets.forEach((dependency) => {
-          // 依存ファイルを探す
-          const depFile =
-            dataformProject.tables.find(
-              (t) =>
-                t.target.name === dependency.name &&
-                t.target.schema === dependency.schema
-            )?.fileName ||
-            dataformProject.declarations.find(
-              (d) =>
-                d.target.name === dependency.name &&
-                d.target.schema === dependency.schema
-            )?.fileName;
-
-          // dependentSqlx が refactoringFiles に含まれない場合も初期化
-          let dependentSqlx = sqlxObjects.find(
-            (sqlx) => sqlx.filePath === depFile
-          );
-          if (!dependentSqlx && depFile) {
-            const dependentTable =
-              dataformProject.tables.find(
-                (table) => table.fileName === depFile
-              ) ||
-              dataformProject.declarations.find(
-                (table) => table.fileName === depFile
-              );
-
-            if (dependentTable) {
-              dependentSqlx = new Sqlx(depFile, dependentTable);
-              //   sqlxObjects.push(dependentSqlx); // 新たに作成した dependentSqlx を追加
-            }
-          }
-
-          // currentSqlx の依存関係として追加
-          const currentSqlx = sqlxObjects.find(
-            (sqlx) => sqlx.filePath === fileName
-          );
-          if (dependentSqlx && currentSqlx) {
-            currentSqlx.addDependency(dependentSqlx);
-          }
-        });
-      }
-    }
-  });
-
   return sqlxObjects;
 };
 
@@ -203,7 +153,7 @@ export const refactor = async (filePath: string) => {
 
     if (bigQueryTable) {
       sqlx.addColumnsFromBigQuery(bigQueryTable);
-      sqlx.inheritColumnsFromDependencies();
+      sqlx.inheritColumnsFromDependencies(result);
       sqlx.save();
     } else {
       console.info(`No BigQuery table found for ${sqlx.filePath}`);
