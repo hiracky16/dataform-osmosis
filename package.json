@@ -1,6 +1,6 @@
 {
   "name": "dataform-osmosis",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "dataform osmosis",
   "main": "index.js",
   "scripts": {
