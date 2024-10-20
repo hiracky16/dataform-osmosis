@@ -2,10 +2,10 @@
   "name": "dataform-osmosis",
   "version": "0.1.0",
   "description": "dataform osmosis",
-  "main": "index.js",
+  "main": "bin/main.js",
   "scripts": {
     "test": "jest",
-    "start": "node ./bin/main.js"
+    "start": "node bin/main.js"
   },
   "dependencies": {
     "@dataform/cli": "^3.0.0",
@@ -17,7 +17,7 @@
   "author": "hiracky16",
   "license": "Apache-2.0",
   "bin": {
-    "dataform-osmosis": "./bin/main.js"
+    "dataform-osmosis": "bin/main.js"
   },
   "devDependencies": {
     "@types/jest": "^29.5.13",
