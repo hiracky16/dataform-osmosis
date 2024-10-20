@@ -66,8 +66,9 @@ class Sqlx {
         config.columns[columnName] = column;
       }
 
-      if (column.bigqueryPolicyTags && typeof column.bigqueryPolicyTags === "string") {
-        config.columns[columnName].bigqueryPolicyTags = [column.bigqueryPolicyTags]
+      const bigqueryPolicyTags = column.bigqueryPolicyTags
+      if (bigqueryPolicyTags && typeof bigqueryPolicyTags === "string") {
+        config.columns[columnName].bigqueryPolicyTags = [bigqueryPolicyTags]
       }
     });
 
