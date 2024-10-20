@@ -56,14 +56,18 @@ class Sqlx {
     }
 
     Object.keys(config.columns).forEach((columnName) => {
-      const column = config.columns![columnName];
+      const column = config.columns[columnName];
 
       if (typeof column === "string") {
-        config.columns![columnName] = {
+        config.columns[columnName] = {
           description: column,
         };
       } else {
-        config.columns![columnName] = column;
+        config.columns[columnName] = column;
+      }
+
+      if (column.bigqueryPolicyTags && typeof column.bigqueryPolicyTags === "string") {
+        config.columns[columnName].bigqueryPolicyTags = [column.bigqueryPolicyTags]
       }
     });
 
@@ -101,7 +105,7 @@ class Sqlx {
           [field.name]: field.policy_tags
             ? {
                 description: field.description || "",
-                bigqueryPolicyTags: field.policy_tags?.names || [],
+                bigqueryPolicyTags: field.policy_tags?.names,
               }
             : {
                 description: field.description || "",

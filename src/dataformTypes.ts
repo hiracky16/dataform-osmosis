@@ -10,7 +10,7 @@ export type SqlxConfig = {
   columns: {
     [columnName: string]: {
       description: string;
-      bigqueryPolicyTags?: string | string[];
+      bigqueryPolicyTags?: string[];
     };
   };
 };
