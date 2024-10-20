@@ -140,14 +140,13 @@ describe("Sqlx", () => {
       const sqlx = new Sqlx(mockFilePath, mockDataformTable);
       const dependencySqlx = new Sqlx(mockFilePath, mockDataformTable);
 
-      dependencySqlx['config'].columns['name'].bigqueryPolicyTags = ["hoge"]
+      dependencySqlx["config"].columns["name"].bigqueryPolicyTags = ["hoge"];
 
       sqlx.addDependency(dependencySqlx);
       sqlx.inheritColumnsFromDependencies();
 
       // 既に存在する policy tag がある場合は上書きしない
       if (sqlx["config"].columns) {
-        console.log(sqlx["config"].columns["id"]);
         expect(sqlx["config"].columns["id"]).toStrictEqual({
           description: "id",
         });
@@ -253,7 +252,6 @@ describe("Sqlx", () => {
 
       // 既に存在する policy tag がある場合は上書きしない
       if (sqlx["config"].columns) {
-        console.log(sqlx["config"].columns["id"]);
         expect(sqlx["config"].columns["id"]).toStrictEqual({
           description: "id",
         });
@@ -280,6 +278,35 @@ describe("Sqlx", () => {
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         mockFilePath,
         expect.stringContaining(expectedNewConfig),
+        "utf-8"
+      );
+    });
+    it("should not remove SQLX config assertion", () => {
+      const assertionMockConfigContent = `config {
+        type: "table",
+        columns: {
+          id: "id",
+          name: {
+            description: "name description",
+            bigqueryPolicyTags: ["projects/example/taxonomies/123456/policyTags/123"]
+          }
+        },
+        assertions: {
+          nonNull: ["id"]
+        }
+      }`;
+      (fs.readFileSync as jest.Mock).mockReturnValue(assertionMockConfigContent);
+      const sqlx = new Sqlx(mockFilePath, mockDataformTable);
+      sqlx.save();
+
+      const expectedNewConfig = `config ${JSON.stringify(
+        sqlx["config"],
+        null,
+        2
+      )}`;
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        mockFilePath,
+        expect.stringContaining("assertions"),
         "utf-8"
       );
     });
