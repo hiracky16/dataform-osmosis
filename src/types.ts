@@ -1,5 +1,5 @@
 type Sqlx = {
-  config: SqlxConfig | OverridedSqlxConfig;
+  config: SqlxConfig;
   path: string;
   content: string;
 };

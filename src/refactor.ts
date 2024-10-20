@@ -1,6 +1,6 @@
 import { compileDataform, loadWorkflowSettings } from "./dataform";
 import { listTablesAndColumns } from "./bigquery";
-import { DataformProject, BigQueryTable } from "./dataformTypes";
+import { DataformProject, BigQueryTable } from "./types";
 import path from "path";
 import fs from "fs";
 import Sqlx from "./Sqlx";

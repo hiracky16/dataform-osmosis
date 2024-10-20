@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import util from "util";
-import { DataformProject, WorkflowSettings } from "./dataformTypes";
+import { DataformProject, WorkflowSettings } from "./types";
 import yaml from "yaml";
 import path from "path";
 import fs from "fs";

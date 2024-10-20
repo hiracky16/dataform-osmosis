@@ -1,4 +1,4 @@
-import { BigQueryTable, DataformTable, SqlxConfig } from "./dataformTypes";
+import { BigQueryTable, DataformTable, SqlxConfig } from "./types";
 import * as fs from "fs";
 
 type FileSqlxConfig = SqlxConfig & {

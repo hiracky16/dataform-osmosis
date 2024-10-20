@@ -1,5 +1,5 @@
 import { BigQuery } from "@google-cloud/bigquery";
-import { BigQueryTable, WorkflowSettings } from "./dataformTypes";
+import { BigQueryTable, WorkflowSettings } from "./types";
 
 export const checkBigQuery = async (projectId: string) => {
   try {

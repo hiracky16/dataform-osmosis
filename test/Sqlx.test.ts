@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import Sqlx from "../src/Sqlx";
-import { BigQueryTable, DataformTable, SqlxConfig } from "../src/dataformTypes";
+import { BigQueryTable, DataformTable, SqlxConfig } from "../src/types";
 
 // fs モジュールをモック
 jest.mock("fs");
