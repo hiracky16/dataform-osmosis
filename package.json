@@ -14,8 +14,8 @@
     "commander": "12.1.0",
     "yaml": "^2.6.0"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "hiracky16",
+  "license": "Apache-2.0",
   "bin": {
     "dataform-osmosis": "./bin/main.js"
   },
