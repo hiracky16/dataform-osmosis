@@ -8,10 +8,10 @@ const execAsync = util.promisify(exec);
 export const checkDataformCli = async () => {
   const { stdout, stderr } = await execAsync("dataform --version");
   if (stderr) {
-    console.error("Error: Dataform CLI is not working.", stderr);
+    console.error("🚫 Error: Dataform CLI is not working.", stderr);
     throw stderr;
   }
-  console.log("Dataform CLI version:", stdout);
+  console.log("✅️ Dataform CLI working. version:", stdout);
 };
 
 /**
