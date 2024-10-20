@@ -5,7 +5,12 @@ services:
       dockerfile: Dockerfile
     tty: true
     stdin_open: true
+    environment:
+      # Adjust to suit your environment as needed.
+      - CLOUDSDK_CONFIG=/gcp/config
+      - GOOGLE_APPLICATION_CREDENTIALS=/gcp/config/application_default_credentials.json
     volumes:
+      - $HOME/.config/gcloud:/gcp/config
       - ./definitions:/app/definitions
       - ./src:/app/src
       - ./bin:/app/bin
