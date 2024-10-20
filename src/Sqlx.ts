@@ -125,7 +125,7 @@ class Sqlx {
       newConfigBlock
     );
     fs.writeFileSync(this.filePath, updatedSqlxContent, "utf-8");
-    console.log(`🔨 Updated SQLX file: ${this.filePath}`);
+    console.info(`🔨 Updated SQLX file: ${this.filePath}`);
   }
 }
 

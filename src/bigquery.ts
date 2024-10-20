@@ -5,7 +5,7 @@ export const checkBigQuery = async (projectId: string) => {
   try {
     const bigquery = new BigQuery({ projectId });
     const project = await bigquery.getProjectId();
-    console.log(`✅️ BigQuery client is working. Using ${project} project.`);
+    console.info(`✅️ BigQuery client is working. Using ${project} project.`);
   } catch (err) {
     console.error("🚫 Error: BigQuery client is not working.", err);
   }

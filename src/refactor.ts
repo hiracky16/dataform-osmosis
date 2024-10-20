@@ -206,7 +206,7 @@ export const refactor = async (filePath: string) => {
       sqlx.inheritColumnsFromDependencies();
       sqlx.save();
     } else {
-      console.log(`No BigQuery table found for ${sqlx.filePath}`);
+      console.info(`No BigQuery table found for ${sqlx.filePath}`);
     }
   });
 };

@@ -14,7 +14,7 @@ program
   .command("valid")
   .description("Validate the current Dataform project")
   .action(async () => {
-    console.log("Validating Dataform project...");
+    console.info("Validating Dataform project...");
     await valid()
   });
 

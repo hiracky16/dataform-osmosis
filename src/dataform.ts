@@ -7,7 +7,7 @@ import fs from "fs";
 
 const execAsync = util.promisify(exec);
 const WORKFLOW_SETTINGS_PATH = path.resolve(
-  __dirname,
+  process.cwd(),
   "workflow_settings.yaml"
 );
 
@@ -19,13 +19,14 @@ export const checkDataformCli = async () => {
   }
 
   try {
-    loadWorkflowSettings()
+    loadWorkflowSettings();
   } catch (err) {
-    console.error("🚫 Error: workflow_settings.yaml file not found.", err);
-    throw err
+    console.log(WORKFLOW_SETTINGS_PATH);
+    console.error("🚫 Error: ", err);
+    throw err;
   }
 
-  console.log("✅️ Dataform CLI working. version:", stdout);
+  console.info("✅️ Dataform CLI working. version:", stdout);
 };
 
 /**
@@ -47,5 +48,5 @@ export const loadWorkflowSettings = (): WorkflowSettings => {
   }
   const fileContent = fs.readFileSync(WORKFLOW_SETTINGS_PATH, "utf8");
   const config = yaml.parse(fileContent) as WorkflowSettings;
-  return config
+  return config;
 };
