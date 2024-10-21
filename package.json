@@ -1,6 +1,6 @@
 {
   "name": "@hiracky16/dataform-osmosis",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "dataform osmosis",
   "main": "./bin/main.js",
   "scripts": {
