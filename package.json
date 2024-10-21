@@ -1,12 +1,15 @@
 {
-  "name": "dataform-osmosis",
-  "version": "0.1.0",
+  "name": "@hiracky16/dataform-osmosis",
+  "version": "0.1.1",
   "description": "dataform osmosis",
-  "main": "bin/main.js",
+  "main": "./bin/main.js",
   "scripts": {
     "test": "jest",
-    "start": "node bin/main.js"
+    "start": "node ./bin/main.js"
   },
+  "files": [
+    "bin"
+  ],
   "dependencies": {
     "@dataform/cli": "^3.0.0",
     "@dataform/core": "^3.0.0",
@@ -17,8 +20,16 @@
   "author": "hiracky16",
   "license": "Apache-2.0",
   "bin": {
-    "dataform-osmosis": "bin/main.js"
+    "dataform-osmosis": "./bin/main.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiracky16/dataform-osmosis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hiracky16/dataform-osmosis/issues"
+  },
+  "homepage": "https://github.com/hiracky16/dataform-osmosis",
   "devDependencies": {
     "@types/jest": "^29.5.13",
     "@types/mock-fs": "^4.13.4",
