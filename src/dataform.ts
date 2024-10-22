@@ -36,7 +36,7 @@ export const checkDataformCli = async () => {
  */
 export const compileDataform = async (): Promise<DataformProject> => {
   const { stdout, stderr } = await execAsync("dataform compile --json", {
-    maxBuffer: 1024 * 1024,
+    maxBuffer: 1024 * 1024 * 10,
   });
   if (stderr) {
     console.error(`Error: ${stderr}`);
