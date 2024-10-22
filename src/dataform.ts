@@ -13,9 +13,7 @@ const WORKFLOW_SETTINGS_PATH = path.resolve(
 const WORKFLOW_SETTINGS_OLD_PATH = path.resolve(process.cwd(), "dataform.json");
 
 export const checkDataformCli = async () => {
-  const { stdout, stderr } = await execAsync("dataform --version", {
-    maxBuffer: 1024 * 1024,
-  });
+  const { stdout, stderr } = await execAsync("dataform --version");
   if (stderr) {
     console.error("🚫 Error: Dataform CLI is not working.", stderr);
     throw stderr;
@@ -37,7 +35,9 @@ export const checkDataformCli = async () => {
  * @returns result of compiling dataform by json
  */
 export const compileDataform = async (): Promise<DataformProject> => {
-  const { stdout, stderr } = await execAsync("dataform compile --json");
+  const { stdout, stderr } = await execAsync("dataform compile --json", {
+    maxBuffer: 1024 * 1024,
+  });
   if (stderr) {
     console.error(`Error: ${stderr}`);
     throw stderr;
