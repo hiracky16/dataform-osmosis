@@ -22,7 +22,6 @@ export const checkDataformCli = async () => {
   try {
     loadWorkflowSettings();
   } catch (err) {
-    console.log(WORKFLOW_SETTINGS_PATH);
     console.error("🚫 Error: ", err);
     throw err;
   }
@@ -39,7 +38,7 @@ export const compileDataform = async (): Promise<DataformProject> => {
     maxBuffer: 1024 * 1024 * 10,
   });
   if (stderr) {
-    console.error(`Error: ${stderr}`);
+    console.error(`🚫 Error: ${stderr}`);
     throw stderr;
   }
   return JSON.parse(stdout) as DataformProject;
@@ -54,7 +53,7 @@ export const loadWorkflowSettings = (): WorkflowSettings => {
     const fileContent = fs.readFileSync(WORKFLOW_SETTINGS_OLD_PATH, "utf8");
     config = JSON.parse(fileContent) as WorkflowSettings;
   } else {
-    throw new Error("workflow_settings.yaml file not found.");
+    throw new Error("🚫 workflow_settings.yaml file not found.");
   }
   return config;
 };

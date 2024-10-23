@@ -121,8 +121,11 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
 // refactor 関数
 export const refactor = async (filePath: string) => {
   const files = refactoringFiles(filePath);
-  const config = loadWorkflowSettings()
+  files.forEach((file) => console.info(`📁 Refactoring ${file}`));
+  const config = loadWorkflowSettings();
+  console.info("🔍️ Loading Dataform Project...");
 
+  console.info("🔍️ Compiling Dataform Project...");
   const result: DataformProject = await compileDataform();
 
   // Sqlx オブジェクトを初期化して依存関係を設定
@@ -132,16 +135,18 @@ export const refactor = async (filePath: string) => {
   const sortedSqlxFiles = topoSortRefactoringFiles(sqlxObjects);
 
   const bigqueryTables: BigQueryTable[] = [];
+  const targetTableDatasetIds = sortedSqlxFiles.map(
+    (sqlx) => sqlx.dataformTable.target.schema
+  );
+  const dependenciesTableDatasetIds = sortedSqlxFiles.flatMap((sqlx) =>
+    sqlx.dependencies.map((d) => d.dataformTable.target.schema)
+  );
   const datasetIds = Array.from(
-    new Set(
-      result.declarations
-        .concat(result.tables)
-        .concat(result.operations)
-        .map((table) => table.target.schema)
-    )
+    new Set(targetTableDatasetIds.concat(dependenciesTableDatasetIds))
   );
 
   for (const dataset of datasetIds) {
+    console.info(`🔍️ Loading BigQuery tables in ${dataset}...`)
     const bqTables = await listTablesAndColumns(config.defaultProject, dataset);
     bigqueryTables.push(...bqTables);
   }
@@ -154,11 +159,13 @@ export const refactor = async (filePath: string) => {
     );
 
     if (bigQueryTable) {
+      console.info(`🔄 Refactoring ${sqlx.filePath}...`)
       sqlx.addColumnsFromBigQuery(bigQueryTable);
       sqlx.inheritColumnsFromDependencies(result);
       sqlx.save();
+      console.info(`✅️ Refactored ${sqlx.filePath}`)
     } else {
-      console.info(`No BigQuery table found for ${sqlx.filePath}`);
+      console.error(`🚫 No BigQuery table found for ${sqlx.filePath}`);
     }
   });
 };

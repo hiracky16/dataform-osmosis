@@ -5,6 +5,7 @@ import {
   SqlxConfig,
 } from "./types";
 import * as fs from "fs";
+import json5 from 'json5'
 
 type FileSqlxConfig = SqlxConfig & {
   columns?: {
@@ -51,7 +52,7 @@ class Sqlx {
         .replace(/config\s*/, "")
         .replace(/(\w+):/g, '"$1":')
         .replace(/'/g, '"');
-      config = JSON.parse(configContent);
+      config = json5.parse(configContent);
     } catch (error) {
       throw new Error(`Failed to parse config in ${this.filePath}: ${error}`);
     }
@@ -163,12 +164,10 @@ class Sqlx {
         };
       }
     });
-    console.log(this.config.columns);
   }
 
   // SQLX ファイルに更新を保存するメソッド
   save() {
-    console.log(this.config.columns);
     const newConfigBlock = `config ${JSON.stringify(this.config, null, 2)}`;
     const sqlxContent = fs.readFileSync(this.filePath, "utf-8");
     const configMatch = sqlxContent.match(CONFIG_BLOCK_PATTERN);
