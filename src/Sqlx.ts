@@ -50,8 +50,6 @@ class Sqlx {
     try {
       const configContent = configMatch[0]
         .replace(/config\s*/, "")
-        .replace(/(\w+):/g, '"$1":')
-        .replace(/'/g, '"');
       config = json5.parse(configContent);
     } catch (error) {
       throw new Error(`Failed to parse config in ${this.filePath}: ${error}`);
