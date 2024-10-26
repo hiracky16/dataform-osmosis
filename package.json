@@ -1,7 +1,7 @@
 {
-  "name": "@hiracky16/dataform-osmosis",
-  "version": "0.1.6",
-  "description": "dataform osmosis",
+  "name": "dataform-osmosis",
+  "version": "0.2.0",
+  "description": "dataform-osmosis is a CLI tool for refactoring and managing Dataform SQLX files.",
   "main": "./bin/main.js",
   "scripts": {
     "test": "jest",
@@ -39,5 +39,8 @@
     "mock-fs": "^5.3.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.6.0"
-  }
+  },
+  "keywords": [
+    "dataform"
+  ]
 }
