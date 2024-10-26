@@ -14,7 +14,6 @@ It allows users to automatically update column information by synchronizing with
 ## Features
 
 - **Synchronize SQLX with BigQuery**: Automatically update column information from the actual BigQuery tables.
-- **Column Reordering**: Reorder columns in SQLX files to match the actual order of columns in BigQuery tables.
 - **Inherit Column Descriptions**: Inherit column descriptions from tables referenced in SQLX files, based on column names.
 
 ## Installation
@@ -30,6 +29,42 @@ Alternatively, if you're developing locally, you can link the package:
 ```bash
 npm link
 ```
+
+## Configuration
+You can specify workflow settings in a workflow_settings.yaml file, similar to the default Dataform CLI settings:
+```yaml
+defaultProject: your-project-id
+defaultLocation: asia-northeast1
+defaultDataset: dataform
+defaultAssertionDataset: dataform_assertions
+```
+
+You can also specify settings in a dataform.json file.
+```json
+{
+    "defaultProject": "your-project-id",
+    "defaultLocation": "asia-northeast1",
+    "defaultDataset": "dataform",
+    "defaultAssertionDataset": "dataform_assertions"
+}
+```
+
+### Setting Up Google Cloud Authentication
+`dataform-osmosis` uses the Google Cloud BigQuery client internally, which requires authentication. For authentication, please use one of the methods described in the Google Cloud documentation: [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) .
+
+By following these authentication methods, the BigQuery client within dataform-osmosis will be able to access your project resources and provide full functionality.
+
+### Setting Up Dataform CLI
+
+`dataform-osmosis` relies on the `@dataform/cli` commands internally, so you’ll need to install and configure the Dataform CLI to use the tool effectively.
+
+To install the Dataform CLI, use the following command:
+```bash
+npm i -g @dataform/cli
+```
+
+For detailed setup instructions and usage, please refer to the official Dataform CLI documentation: [Using the Dataform CLI](https://cloud.google.com/dataform/docs/use-dataform-cli) .
+
 
 ## Usage
 
@@ -81,25 +116,6 @@ config {
 ```
 
 If the BigQuery table has an additional column age and the referenced table has the same column name with a description, dataform-osmosis will update the SQLX file to include the missing column and update descriptions where needed.
-
-## Configuration
-You can specify workflow settings in a workflow_settings.yaml file, similar to the default Dataform CLI settings:
-```yaml
-defaultProject: your-project-id
-defaultLocation: asia-northeast1
-defaultDataset: dataform
-defaultAssertionDataset: dataform_assertions
-```
-
-You can also specify settings in a dataform.json file.
-```json
-{
-    "defaultProject": "your-project-id",
-    "defaultLocation": "asia-northeast1",
-    "defaultDataset": "dataform",
-    "defaultAssertionDataset": "dataform_assertions"
-}
-```
 
 ## Development
 If you're contributing to dataform-osmosis or developing locally, follow these steps to set up your environment:
