@@ -64,6 +64,38 @@ const initializeSqlxObjects = (
     }
   });
 
+  sqlxObjects.forEach((sqlx) => {
+    sqlx.dataformTable.dependencyTargets?.forEach((dependencyTarget) => {
+      const dataformTable =
+        dataformProject.tables.find((table) => {
+          return (
+            table.target.database == dependencyTarget.database &&
+            table.target.schema == dependencyTarget.schema &&
+            table.target.name == dependencyTarget.name
+          );
+        }) ||
+        dataformProject.declarations.find((table) => {
+          return (
+            table.target.database == dependencyTarget.database &&
+            table.target.schema == dependencyTarget.schema &&
+            table.target.name == dependencyTarget.name
+          );
+        }) ||
+        dataformProject.operations.find((table) => {
+          return (
+            table.target.database == dependencyTarget.database &&
+            table.target.schema == dependencyTarget.schema &&
+            table.target.name == dependencyTarget.name
+          );
+        });
+
+      if (dataformTable) {
+        const dependencySqlx = new Sqlx(dataformTable.fileName, dataformTable);
+        sqlx.addDependency(dependencySqlx);
+      }
+    });
+  });
+
   return sqlxObjects;
 };
 
@@ -97,6 +129,7 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
       queue.push(filePath);
     }
   });
+  console.log(inDegree);
 
   while (queue.length > 0) {
     const filePath = queue.shift()!;
@@ -146,7 +179,7 @@ export const refactor = async (filePath: string) => {
   );
 
   for (const dataset of datasetIds) {
-    console.info(`🔍️ Loading BigQuery tables in ${dataset}...`)
+    console.info(`🔍️ Loading BigQuery tables in ${dataset}...`);
     const bqTables = await listTablesAndColumns(config.defaultProject, dataset);
     bigqueryTables.push(...bqTables);
   }
@@ -159,11 +192,11 @@ export const refactor = async (filePath: string) => {
     );
 
     if (bigQueryTable) {
-      console.info(`🔄 Refactoring ${sqlx.filePath}...`)
+      console.info(`🔄 Refactoring ${sqlx.filePath}...`);
       sqlx.addColumnsFromBigQuery(bigQueryTable);
       sqlx.inheritColumnsFromDependencies(result);
       sqlx.save();
-      console.info(`✅️ Refactored ${sqlx.filePath}`)
+      console.info(`✅️ Refactored ${sqlx.filePath}`);
     } else {
       console.error(`🚫 No BigQuery table found for ${sqlx.filePath}`);
     }
