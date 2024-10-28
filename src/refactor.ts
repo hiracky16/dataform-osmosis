@@ -129,7 +129,6 @@ const topoSortRefactoringFiles = (sqlxObjects: Sqlx[]): Sqlx[] => {
       queue.push(filePath);
     }
   });
-  console.log(inDegree);
 
   while (queue.length > 0) {
     const filePath = queue.shift()!;
