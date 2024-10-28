@@ -1,6 +1,6 @@
 {
   "name": "dataform-osmosis",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "dataform-osmosis is a CLI tool for refactoring and managing Dataform SQLX files.",
   "main": "./bin/main.js",
   "scripts": {
