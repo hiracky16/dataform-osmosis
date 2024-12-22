@@ -5,6 +5,7 @@
   "main": "./bin/main.js",
   "scripts": {
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "build": "tsc",
     "start": "node ./bin/main.js"
   },
