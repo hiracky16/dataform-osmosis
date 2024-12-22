@@ -7,7 +7,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "build": "tsc",
-    "start": "node ./bin/main.js"
+    "start": "node ./bin/main.js",
+    "test:coverage:ci": "npm run test -- --coverage --silent --testLocationInResults --ci --json --outputFile=\"report.json\""
   },
   "files": [
     "bin"
