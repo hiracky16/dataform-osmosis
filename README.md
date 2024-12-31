@@ -83,13 +83,13 @@ dataform-osmosis valid
 To refactor SQLX files by updating column information and reordering columns, use the refactor command:
 
 ```bash
-dataform-osmosis refactor -f [file_or_directory]
+dataform-osmosis sqlx refactor -f [file_or_directory]
 ```
 
 For example:
 
 ```bash
-dataform-osmosis refactor -f definitions/marts/test
+dataform-osmosis sqlx refactor -f definitions/marts/test
 ```
 
 This command refactors all SQLX files within the definitions/marts/test directory, or a single SQLX file if specified. It performs the following operations:
