@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name("dataform-osmosis")
   .description("CLI tool for Dataform Osmosis")
-  .version("0.2.2");
+  .version("0.2.3");
 
 program
   .command("valid")
