@@ -20,6 +20,14 @@ describe("Sqlx", () => {
     }
   `;
 
+    let mockConfigContentWtObjectColumn = `
+    config {
+      type: "table",
+      columns: docs.column_description,
+    }
+  `;
+
+
   const mockDataformTable: DataformTable = {
     type: "table",
     target: {
@@ -122,6 +130,15 @@ describe("Sqlx", () => {
       (fs.readFileSync as jest.Mock).mockReturnValue("select 1");
       const sqlx = new Sqlx(mockFilePath, mockDataformTable);
       expect(sqlx["config"]).toHaveProperty("type");
+    });
+
+    it("column definition will be parsed as empty is declared as obj.key", () => {
+        (fs.readFileSync as jest.Mock).mockReturnValue(mockConfigContentWtObjectColumn);
+        const sqlx = new Sqlx(mockFilePath, mockDataformTable);
+        expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, "utf-8");
+        expect(sqlx["config"].type).toBe("table");
+        expect(Object.keys(sqlx["config"].columns).length).toBe(0);
+        expect(JSON.stringify(sqlx["config"].columns)).toBe('{}');
     });
   });
 
