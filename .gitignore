@@ -4,3 +4,4 @@ node_modules
 workflow_settings.yaml
 dataform.json
 bin
+coverage
