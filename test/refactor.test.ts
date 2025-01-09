@@ -96,3 +96,4 @@ it("should return .sqlx files from subdirectories recursively", () => {
     ])
   );
 });
+
