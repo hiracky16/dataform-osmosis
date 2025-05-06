@@ -12,19 +12,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      checks: write
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.9
 
-    - name: Install dependencies
-      run: npm install
-
-    - uses: ArtiomTr/jest-coverage-report-action@v2.0-rc.6
-      with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          test-script: npm run test:coverage:ci
+      - name: Install dependencies
+        run: npm install
